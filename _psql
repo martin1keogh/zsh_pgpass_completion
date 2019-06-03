@@ -1,0 +1,40 @@
+#compdef psql
+
+# if $2 is different from '*', returns the string "$1=$2"
+# else returns an empty string
+function set_if_not_wildcard {
+  if [[ $2 != '*' ]]; then
+    echo "--$1=$2"
+  else
+    echo ""
+  fi
+}
+
+# transform from host:port:user:pass
+# to "host=host port=port user=user"
+#
+# if the value of one those 3 is '*' (wilcard)
+# it will not appear in the conninfo string
+function pgpass_syntax_to_conninfo {
+  split_line=($(echo $1 | sed -e 's/:/ /g'))
+
+  host="$(set_if_not_wildcard host $split_line[1])"
+  port="$(set_if_not_wildcard port $split_line[2])"
+  user="$(set_if_not_wildcard user $split_line[3])"
+
+  echo "$host $port $user"
+}
+
+_complete_databases_from_pgpass() {
+  ret=1
+  local -a arr
+
+  grep -v '^#' ~/.pgpass | while read -r line; do
+    arr+=$(pgpass_syntax_to_conninfo $line)
+  done
+
+  _describe test arr && ret=0
+  return ret
+}
+
+_complete_databases_from_pgpass
