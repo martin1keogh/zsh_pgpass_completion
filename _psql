@@ -1,39 +1,41 @@
 #compdef psql
 
-# if $2 is different from '*', returns the string "$1=$2"
-# else returns an empty string
-function set_if_not_wildcard {
-  if [[ $2 != '*' ]]; then
-    echo "--$1=$2"
-  else
+# if $1 is equal to '*', returns the empty string
+# else returns $1
+function empty_of_wildcard {
+  if [[ "$1" == '*' ]]; then
     echo ""
+  else
+    echo "$1"
   fi
 }
 
-# transform from host:port:user:pass
-# to "host=host port=port user=user"
+# transform from host:port:db:user:pass
+# to "postgresql://user@host:post/db"
 #
-# if the value of one those 3 is '*' (wilcard)
+# if the value of one those 4 is '*' (wilcard)
 # it will not appear in the conninfo string
 function pgpass_syntax_to_conninfo {
+  # TODO handle escaped ':'
   split_line=($(echo $1 | sed -e 's/:/ /g'))
 
-  host="$(set_if_not_wildcard host $split_line[1])"
-  port="$(set_if_not_wildcard port $split_line[2])"
-  user="$(set_if_not_wildcard user $split_line[3])"
+  host="$(empty_of_wildcard $split_line[1])"
+  port="$(empty_of_wildcard $split_line[2])"
+  name="$(empty_of_wildcard $split_line[3])"
+  user="$(empty_of_wildcard $split_line[4])"
 
-  echo "$host $port $user"
+  echo "postgresql\://${user}@${host}\:${port}/${name}"
 }
 
 _complete_databases_from_pgpass() {
   ret=1
   local -a arr
 
-  grep -v '^#' ~/.pgpass | while read -r line; do
-    arr+=$(pgpass_syntax_to_conninfo $line)
+  grep -v '^\(#\|$\)' ~/.pgpass | while read -r line; do
+    arr+="$(pgpass_syntax_to_conninfo $line):database"
   done
 
-  _describe test arr && ret=0
+  _describe 'known databases' arr && ret=0
   return ret
 }
 
