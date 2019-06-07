@@ -52,6 +52,17 @@ postgresql://user@35.127.0.1:5342/project_name  --  RDS fake project staging
 postgresql://user@35.127.0.2:5342/project_name  --  RDS fake project prod
 ```
 
+## TODOs
+### Additional parameters
+Allow setting [additional parameters](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) (presumably sort of like how the aliases are read today)
+
+### Create Zsh completion groups
+The completion system can create groups of matches. Being able to group databases together (eg per project or environment) would be nice.
+
+### Other completion info
+This completion script only shows databases in the completion list (and override any other completion for that matter).  
+There might be some more information that could be useful to diplay (eg `_gnu_generic` might be nice).
+
 ## Bugs
 Probably a lot, this is my first time writing a zsh completion script and it's
 not the most beginner friendly thing around.
