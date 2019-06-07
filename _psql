@@ -1,38 +1,60 @@
 #compdef psql
 
-# if $1 is equal to '*', returns the empty string
-# else returns $1
-function empty_of_wildcard {
-  if [[ "$1" == '*' ]]; then
-    echo ""
-  else
-    echo "$1"
-  fi
-}
-
 # transform from host:port:db:user:pass
-# to "postgresql://user@host:post/db"
+# to "postgresql://user@host:port/db"
 #
 # if the value of one those 4 is '*' (wilcard)
 # it will not appear in the conninfo string
+#
+# also support giving a database an alias by specifying
+# '# alias: <database alias>'
+# in the line above the connection info in the .pgpass file.
 function pgpass_syntax_to_conninfo {
-  # TODO handle escaped ':'
-  split_line=($(echo $1 | sed -e 's/:/ /g'))
+  awk -F ':' '
+    function empty_of_wildcard(param) {
+      if (param == "*")
+        return ""
+      return param
+    }
 
-  host="$(empty_of_wildcard $split_line[1])"
-  port="$(empty_of_wildcard $split_line[2])"
-  name="$(empty_of_wildcard $split_line[3])"
-  user="$(empty_of_wildcard $split_line[4])"
+    BEGIN {
+      database_number = 1; # give a number to each database to print them in the file order in the zsh completion
+      alias = "";
+    }
 
-  echo "postgresql\://${user}@${host}\:${port}/${name}"
+    # matches an database alias definition, we will store this name
+    # up until we find the next database connection info
+    $1 == "# alias" {
+      alias = $2;
+      next;
+    }
+
+    # 5 or more fields identifies (presumably) a database connection info
+    # (more than 5 fields if there are escaped : on this line, eg in the password)
+    # TODO: handle escaped colon in fields other than the password (hopefully that
+    # is pretty rare though)
+    NF >= 5 {
+      host = empty_of_wildcard($1);
+      port = empty_of_wildcard($2);
+      db_name = empty_of_wildcard($3);
+      user = empty_of_wildcard($4);
+
+      conninfo = "postgresql\\\://" user "@" host "\\\:" port "/" db_name;
+
+      print conninfo ":" database_number "." alias;
+
+      alias = "";
+      database_number += 1;
+    }
+  ' ~/.pgpass
 }
 
 _complete_databases_from_pgpass() {
   ret=1
   local -a arr
 
-  grep -v '^\(#\|$\)' ~/.pgpass | while read -r line; do
-    arr+="$(pgpass_syntax_to_conninfo $line):database"
+  pgpass_syntax_to_conninfo | while read line; do
+    arr+=$line
   done
 
   _describe 'known databases' arr && ret=0
