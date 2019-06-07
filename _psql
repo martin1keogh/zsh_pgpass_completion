@@ -17,11 +17,6 @@ function pgpass_syntax_to_conninfo {
       return param
     }
 
-    BEGIN {
-      database_number = 1; # give a number to each database to print them in the file order in the zsh completion
-      alias = "";
-    }
-
     # matches an database alias definition, we will store this name
     # up until we find the next database connection info
     $1 == "# alias" {
@@ -41,10 +36,9 @@ function pgpass_syntax_to_conninfo {
 
       conninfo = "postgresql\\\://" user "@" host "\\\:" port "/" db_name;
 
-      print conninfo ":" database_number "." alias;
+      print conninfo ":" alias;
 
       alias = "";
-      database_number += 1;
     }
   ' ~/.pgpass
 }
@@ -57,7 +51,7 @@ _complete_databases_from_pgpass() {
     arr+=$line
   done
 
-  _describe 'known databases' arr && ret=0
+  _describe -V 'known databases' arr && ret=0
   return ret
 }
 
