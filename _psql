@@ -40,7 +40,7 @@ function pgpass_syntax_to_conninfo {
 
       alias = "";
     }
-  ' ~/.pgpass
+  ' ${PGPASSFILE-~/.pgpass}
 }
 
 _complete_databases_from_pgpass() {
