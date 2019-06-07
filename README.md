@@ -52,6 +52,8 @@ postgresql://user@35.127.0.1:5342/project_name  --  RDS fake project staging
 postgresql://user@35.127.0.2:5342/project_name  --  RDS fake project prod
 ```
 
+or as a screenshot to be a bit more eye-catching: ![completion image](../assets/pgpass_completion.png)
+
 ## TODOs
 ### Additional parameters
 Allow setting [additional parameters](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) (presumably sort of like how the aliases are read today)
