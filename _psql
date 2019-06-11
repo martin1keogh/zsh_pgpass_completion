@@ -24,6 +24,11 @@ function pgpass_syntax_to_conninfo {
       next;
     }
 
+    # skip comments that do not match known metadata
+    $1 ~ /^#/ {
+      next;
+    }
+
     # 5 or more fields identifies (presumably) a database connection info
     # (more than 5 fields if there are escaped : on this line, eg in the password)
     # TODO: handle escaped colon in fields other than the password (hopefully that
